@@ -19,8 +19,9 @@ var helmReleaseCmd = &cobra.Command{
 		name, _ := cmd.Flags().GetString("name")
 		namespace, _ := cmd.Flags().GetString("namespace")
 		helmURL, _ := cmd.Flags().GetString("helm-url")
+		valuesFile, _ := cmd.Flags().GetString("values-file")
 
-		generateHelmRelease(name, namespace, helmURL)
+		generateHelmRelease(name, namespace, helmURL, valuesFile)
 	},
 }
 
@@ -30,6 +31,7 @@ func init() {
 	helmReleaseCmd.Flags().StringP("name", "n", "", "name for the application")
 	helmReleaseCmd.Flags().StringP("namespace", "", "default", "namespace field for CR")
 	helmReleaseCmd.Flags().StringP("helm-url", "", "", "where is placed Helm Chart")
+	helmReleaseCmd.Flags().StringP("values-file", "v", "values.yaml", "path to values file")
 }
 
 type Metadata struct {
@@ -57,10 +59,10 @@ type HelmReleaseCR struct {
 	Spec       Spec
 }
 
-func generateHelmRelease(name string, namespace string, repository string) {
+func generateHelmRelease(name string, namespace string, repository string, valuesFile string) {
 
 	var values map[string]interface{}
-	bs, err := ioutil.ReadFile("values.yaml")
+	bs, err := ioutil.ReadFile(valuesFile)
 	if err != nil {
 		panic(err)
 	}
