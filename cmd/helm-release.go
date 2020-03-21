@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-
 	"io/ioutil"
 
 	"github.com/spf13/cobra"
@@ -20,8 +19,11 @@ var helmReleaseCmd = &cobra.Command{
 		namespace, _ := cmd.Flags().GetString("namespace")
 		helmURL, _ := cmd.Flags().GetString("helm-url")
 		valuesFile, _ := cmd.Flags().GetString("values-file")
+		registry, _ := cmd.Flags().GetString("registry")
+		repository, _ := cmd.Flags().GetString("repository")
+		tag, _ := cmd.Flags().GetString("tag")
 
-		generateHelmRelease(name, namespace, helmURL, valuesFile)
+		generateHelmRelease(name, namespace, helmURL, valuesFile, registry, repository, tag)
 	},
 }
 
@@ -32,6 +34,19 @@ func init() {
 	helmReleaseCmd.Flags().StringP("namespace", "", "default", "namespace field for CR")
 	helmReleaseCmd.Flags().StringP("helm-url", "", "", "where is placed Helm Chart")
 	helmReleaseCmd.Flags().StringP("values-file", "v", "values.yaml", "path to values file")
+	helmReleaseCmd.Flags().StringP("registry", "R", "", "Registry where docker image is hosted")
+	helmReleaseCmd.Flags().StringP("repository", "r", "", "Repository where docker image is hosted")
+	helmReleaseCmd.Flags().StringP("tag", "t", "", "Docker image tag")
+}
+
+type Image struct {
+	Registry   string `yaml:"registry"`
+	Repository string `yaml:"repository"`
+	Tag        string `yaml:"tag"`
+}
+
+type ImageSpec struct {
+	Image Image
 }
 
 type Metadata struct {
@@ -59,15 +74,34 @@ type HelmReleaseCR struct {
 	Spec       Spec
 }
 
-func generateHelmRelease(name string, namespace string, repository string, valuesFile string) {
+func generateHelmRelease(name string, namespace string, helmURL string, valuesFile string, registry string, repository string, tag string) {
 
 	var values map[string]interface{}
+
+	imageValues := &ImageSpec{
+		Image: Image{
+			Registry:   registry,
+			Repository: repository,
+			Tag:        tag,
+		},
+	}
+
+	var imageInterface map[string]interface{}
+	inrec, _ := yaml.Marshal(imageValues)
+	yaml.Unmarshal(inrec, &imageInterface)
+
+	//Read values files
 	bs, err := ioutil.ReadFile(valuesFile)
 	if err != nil {
 		panic(err)
 	}
 	if err := yaml.Unmarshal(bs, &values); err != nil {
 		panic(err)
+	}
+
+	//Override image values
+	for k, v := range imageInterface {
+		values[k] = v
 	}
 
 	t := HelmReleaseCR{
@@ -81,7 +115,7 @@ func generateHelmRelease(name string, namespace string, repository string, value
 		Spec: Spec{
 			ReleaseName: name,
 			Chart: Chart{
-				Repository: repository,
+				Repository: helmURL,
 				Name:       name,
 				Version:    "0.0.1",
 			},
