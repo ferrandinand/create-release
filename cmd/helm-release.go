@@ -17,13 +17,14 @@ var helmReleaseCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		name, _ := cmd.Flags().GetString("name")
 		namespace, _ := cmd.Flags().GetString("namespace")
-		helmURL, _ := cmd.Flags().GetString("helm-url")
+		gitRepoURL, _ := cmd.Flags().GetString("git-repo-url")
+		chartName, _ := cmd.Flags().GetString("chart-name")
 		valuesFile, _ := cmd.Flags().GetString("values-file")
 		registry, _ := cmd.Flags().GetString("registry")
 		repository, _ := cmd.Flags().GetString("repository")
 		tag, _ := cmd.Flags().GetString("tag")
 
-		generateHelmRelease(name, namespace, helmURL, valuesFile, registry, repository, tag)
+		generateHelmRelease(name, namespace, gitRepoURL, chartName, valuesFile, registry, repository, tag)
 	},
 }
 
@@ -32,7 +33,8 @@ func init() {
 
 	helmReleaseCmd.Flags().StringP("name", "n", "", "name for the application")
 	helmReleaseCmd.Flags().StringP("namespace", "", "default", "namespace field for CR")
-	helmReleaseCmd.Flags().StringP("helm-url", "", "", "where is placed Helm Chart")
+	helmReleaseCmd.Flags().StringP("git-repo-url", "", "", "Git repo where is placed Helm Chart")
+	helmReleaseCmd.Flags().StringP("chart-name", "c", "", "Helm Chart name inside the git repo url")
 	helmReleaseCmd.Flags().StringP("values-file", "v", "values.yaml", "path to values file")
 	helmReleaseCmd.Flags().StringP("registry", "R", "", "Registry where docker image is hosted")
 	helmReleaseCmd.Flags().StringP("repository", "r", "", "Repository where docker image is hosted")
@@ -56,9 +58,9 @@ type Metadata struct {
 }
 
 type Chart struct {
-	Repository string `yaml:"repository"`
-	Name       string `yaml:"name"`
-	Version    string `yaml:"version"`
+	Git  string `yaml:"git"`
+	Path string `yaml:"path"`
+	Ref  string `yaml:"ref"`
 }
 
 type Spec struct {
@@ -74,7 +76,7 @@ type HelmReleaseCR struct {
 	Spec       Spec
 }
 
-func generateHelmRelease(name string, namespace string, helmURL string, valuesFile string, registry string, repository string, tag string) {
+func generateHelmRelease(name string, namespace string, gitRepoURL string, chartName string, valuesFile string, registry string, repository string, tag string) {
 
 	var values map[string]interface{}
 
@@ -115,9 +117,9 @@ func generateHelmRelease(name string, namespace string, helmURL string, valuesFi
 		Spec: Spec{
 			ReleaseName: name,
 			Chart: Chart{
-				Repository: helmURL,
-				Name:       name,
-				Version:    "0.0.1",
+				Git:  gitRepoURL,
+				Path: chartName,
+				Ref:  "master",
 			},
 			Values: values,
 		},
