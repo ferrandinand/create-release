@@ -52,9 +52,9 @@ type ImageSpec struct {
 }
 
 type Metadata struct {
-	Name        string   `yaml:"name"`
-	Namespace   string   `yaml:"namespace"`
-	Annotations []string `yaml:"annotations"`
+	Name        string            `yaml:"name"`
+	Namespace   string            `yaml:"namespace"`
+	Annotations map[string]string `yaml:"annotations"`
 }
 
 type Chart struct {
@@ -112,7 +112,7 @@ func generateHelmRelease(name string, namespace string, gitRepoURL string, chart
 		Metadata: Metadata{
 			Name:        name,
 			Namespace:   namespace,
-			Annotations: []string{"fluxcd.io/automated: true"},
+			Annotations: map[string]string{"fluxcd.io/automated": "true"},
 		},
 		Spec: Spec{
 			ReleaseName: name,
