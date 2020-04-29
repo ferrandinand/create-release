@@ -18,13 +18,14 @@ var helmReleaseCmd = &cobra.Command{
 		name, _ := cmd.Flags().GetString("name")
 		namespace, _ := cmd.Flags().GetString("namespace")
 		gitRepoURL, _ := cmd.Flags().GetString("git-repo-url")
+		gitRef, _ := cmd.Flags().GetString("git-repo-ref")
 		chartName, _ := cmd.Flags().GetString("chart-name")
 		valuesFile, _ := cmd.Flags().GetString("values-file")
 		registry, _ := cmd.Flags().GetString("registry")
 		repository, _ := cmd.Flags().GetString("repository")
 		tag, _ := cmd.Flags().GetString("tag")
 
-		generateHelmRelease(name, namespace, gitRepoURL, chartName, valuesFile, registry, repository, tag)
+		generateHelmRelease(name, namespace, gitRepoURL, chartName, gitRef, valuesFile, registry, repository, tag)
 	},
 }
 
@@ -34,6 +35,7 @@ func init() {
 	helmReleaseCmd.Flags().StringP("name", "n", "", "name for the application")
 	helmReleaseCmd.Flags().StringP("namespace", "", "default", "namespace field for CR")
 	helmReleaseCmd.Flags().StringP("git-repo-url", "", "", "Git repo where is placed Helm Chart")
+	helmReleaseCmd.Flags().StringP("git-repo-ref", "", "", "Git repo reference for the chart, can be a branch or a tag")
 	helmReleaseCmd.Flags().StringP("chart-name", "c", "", "Helm Chart name inside the git repo url")
 	helmReleaseCmd.Flags().StringP("values-file", "v", "values.yaml", "path to values file")
 	helmReleaseCmd.Flags().StringP("registry", "R", "", "Registry where docker image is hosted")
@@ -76,7 +78,7 @@ type HelmReleaseCR struct {
 	Spec       Spec
 }
 
-func generateHelmRelease(name string, namespace string, gitRepoURL string, chartName string, valuesFile string, registry string, repository string, tag string) {
+func generateHelmRelease(name string, namespace string, gitRepoURL string, chartName string, gitRef string, valuesFile string, registry string, repository string, tag string) {
 
 	var values map[string]interface{}
 
@@ -119,7 +121,7 @@ func generateHelmRelease(name string, namespace string, gitRepoURL string, chart
 			Chart: Chart{
 				Git:  gitRepoURL,
 				Path: chartName,
-				Ref:  "master",
+				Ref:  gitRef,
 			},
 			Values: values,
 		},
