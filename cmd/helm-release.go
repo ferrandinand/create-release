@@ -23,9 +23,10 @@ var helmReleaseCmd = &cobra.Command{
 		valuesFile, _ := cmd.Flags().GetString("values-file")
 		registry, _ := cmd.Flags().GetString("registry")
 		repository, _ := cmd.Flags().GetString("repository")
+		ouputFile, _ := cmd.Flags().GetString("output-file")
 		tag, _ := cmd.Flags().GetString("tag")
 
-		generateHelmRelease(name, namespace, gitRepoURL, chartName, gitRef, valuesFile, registry, repository, tag)
+		generateHelmRelease(name, namespace, gitRepoURL, chartName, gitRef, valuesFile, registry, repository, ouputFile, tag)
 	},
 }
 
@@ -40,6 +41,7 @@ func init() {
 	helmReleaseCmd.Flags().StringP("values-file", "v", "values.yaml", "path to values file")
 	helmReleaseCmd.Flags().StringP("registry", "R", "", "Registry where docker image is hosted")
 	helmReleaseCmd.Flags().StringP("repository", "r", "", "Repository where docker image is hosted")
+	helmReleaseCmd.Flags().StringP("output-file", "", "", "Output file name without extension")
 	helmReleaseCmd.Flags().StringP("tag", "t", "", "Docker image tag")
 }
 
@@ -78,7 +80,7 @@ type HelmReleaseCR struct {
 	Spec       Spec
 }
 
-func generateHelmRelease(name string, namespace string, gitRepoURL string, chartName string, gitRef string, valuesFile string, registry string, repository string, tag string) {
+func generateHelmRelease(name string, namespace string, gitRepoURL string, chartName string, gitRef string, valuesFile string, registry string, repository string, ouputFile string, tag string) {
 
 	var values map[string]interface{}
 
@@ -114,7 +116,7 @@ func generateHelmRelease(name string, namespace string, gitRepoURL string, chart
 		Metadata: Metadata{
 			Name:        name,
 			Namespace:   namespace,
-			Annotations: map[string]string{"fluxcd.io/automated": "true"},
+			Annotations: map[string]string{"fluxcd.io/automated": "false"},
 		},
 		Spec: Spec{
 			ReleaseName: name,
@@ -132,7 +134,7 @@ func generateHelmRelease(name string, namespace string, gitRepoURL string, chart
 		panic(err)
 	}
 
-	err = ioutil.WriteFile(name+".yaml", output, 755)
+	err = ioutil.WriteFile(ouputFile+".yaml", output, 755)
 	if err != nil {
 		panic(err)
 	}
