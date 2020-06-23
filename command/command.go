@@ -1,4 +1,3 @@
-// Package command implements the root command for the command line tool.
 package command
 
 import (
@@ -30,15 +29,12 @@ func New(config Config) (*Command, error) {
 
 	// apply settings from environment variables
 
-
-
 	newCommand.cobraCommand = &cobra.Command{
-		Use:   config.Name,
-		Short: config.Description,
-		Long:  config.Description,
+		Use:   "opsctl",
+		Short: "opsctl command line CLI",
+		Long:  "opsctl command line CLI created to manage cloud resources",
 		Run:   newCommand.Execute,
 	}
-
 
 	var createCommand *create.Command
 	{

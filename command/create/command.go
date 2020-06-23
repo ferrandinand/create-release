@@ -1,6 +1,7 @@
-package command
+package create
 
 import (
+	"github.com/ferrandinand/create-release/command/create/helmrelease"
 	"github.com/ferrandinand/create-release/command/create/project"
 	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/micrologger"
@@ -45,7 +46,20 @@ func New(config Config) (*Command, error) {
 		}
 	}
 
+	var helmReleaseCommand *helmrelease.Command
+	{
+		c := helmrelease.Config{
+			Logger: config.Logger,
+		}
+
+		helmReleaseCommand, err = helmrelease.New(c)
+		if err != nil {
+			return nil, microerror.Mask(err)
+		}
+	}
+
 	newCommand.cobraCommand.AddCommand(projectCommand.CobraCommand())
+	newCommand.cobraCommand.AddCommand(helmReleaseCommand.CobraCommand())
 
 	return newCommand, nil
 }

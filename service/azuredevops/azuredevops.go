@@ -12,14 +12,13 @@ import (
 )
 
 const (
-	buildsPath      = "%s/%s/_apis/build/builds?api-version=5.1"
-	buildParameters = "{\"definition\": {\"id\": %s }, \"parameters\": \"{\\\"project_name\\\": \\\"%s\\\",\\\"project_type\\\": \\\"%s\\\"}\"}"
+	baseURL    = "https://dev.azure.com"
+	buildsPath = "%s/%s/_apis/build/builds?api-version=5.1"
 )
 
 // Config represents the configuration used to create a new azdvo service.
 type Config struct {
 	// Settings.
-	ADVOURL   string
 	ADVOUser  string
 	AZDOToken string
 }
@@ -27,7 +26,6 @@ type Config struct {
 // Service represents a azdvo service.
 type Service struct {
 	// Settings.
-	ADVOURL   string
 	ADVOUser  string
 	AZDOToken string
 }
@@ -36,7 +34,6 @@ type Service struct {
 func DefaultConfig() Config {
 	newConfig := Config{
 		// Settings.
-		ADVOURL:   "",
 		ADVOUser:  "",
 		AZDOToken: "",
 	}
@@ -47,17 +44,16 @@ func DefaultConfig() Config {
 // New creates a new configured azdvo service.
 func New(config Config) (*Service, error) {
 	// Settings.
-	if config.ADVOURL == "" || config.ADVOUser == "" || config.AZDOToken == "" {
+	if config.ADVOUser == "" || config.AZDOToken == "" {
 		return nil, microerror.Maskf(
 			invalidConfigError,
-			"ADVOURL, ADVOUser and AZDOToken must not be empty",
+			"ADVOUser and AZDOToken must not be empty",
 		)
 	}
 
 	// Create service.
 	newService := &Service{
 		// Settings.
-		ADVOURL:   config.ADVOURL,
 		ADVOUser:  config.ADVOUser,
 		AZDOToken: config.AZDOToken,
 	}
@@ -66,12 +62,12 @@ func New(config Config) (*Service, error) {
 }
 
 // runPipeline will trigger Azure Devops pipeline.
-func (s *Service) runPipeline(ctx context.Context, organization string, project string, params string) error {
+func (s *Service) RunPipeline(ctx context.Context, organization string, project string, params string) error {
 	client := http.DefaultClient
 
 	// Prepare URL.
 	buildPath := fmt.Sprintf(buildsPath, organization, project)
-	buildURL, err := url.Parse(s.ADVOURL + "/" + buildPath)
+	buildURL, err := url.Parse(baseURL + "/" + buildPath)
 	if err != nil {
 		return microerror.Mask(err)
 	}
@@ -93,7 +89,7 @@ func (s *Service) runPipeline(ctx context.Context, organization string, project 
 	resp, err := client.Do(req)
 	if err != nil {
 		log.Fatal(err)
-	} else if resp.StatusCode != http.StatusCreated {
+	} else if resp.StatusCode != http.StatusOK {
 		return microerror.Maskf(
 			unexpectedResponseError,
 			fmt.Sprint(resp.StatusCode),
