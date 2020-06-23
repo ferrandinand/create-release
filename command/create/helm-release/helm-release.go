@@ -1,4 +1,4 @@
-package cmd
+package command
 
 import (
 	"fmt"
@@ -31,7 +31,7 @@ var helmReleaseCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.AddCommand(helmReleaseCmd)
+	createCmd.AddCommand(helmReleaseCmd)
 
 	helmReleaseCmd.Flags().StringP("name", "n", "", "name for the application")
 	helmReleaseCmd.Flags().StringP("namespace", "", "default", "namespace field for CR")
